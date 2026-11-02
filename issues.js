@@ -2,6 +2,80 @@
 // verdict: "try" — пробовать сейчас, "watch" — следить, "skip" — пропустить.
 window.SDVIG_ISSUES = [
   {
+    id: "2026-11-02",
+    number: 4,
+    date: "2 ноября 2026",
+    period: "26 октября – 1 ноября",
+    shift: "Ответ агента без квитанции — это гипотеза: логи, сертифицированные метрики и lineage стали нормой.",
+    lead: "Looker открыл агентам MCP-сервер и включил lineage для агентов, BigQuery начал писать все разговоры агента в таблицу. А разбор AWS и dbt показал цену ошибки: агент без семантического слоя завысил выручку на 30,8%, и ничего не сломалось.",
+    items: [
+      {
+        verdict: "try",
+        area: "Практика",
+        title: "Агент завысил выручку на $3,5 млн: AWS и dbt дают ему только готовые метрики",
+        what: "В разборе dbt Labs (обновлён 27 октября) агент посчитал выручку как SUM(gross_amount) и получил $14,86 млн вместо $11,36 млн: забыл скидки, возвраты, отменённые заказы и тестовые аккаунты. Правила жили в семантическом слое, а не в схеме. Решение: агент выбирает метрику через dbt MCP (list_metrics, query_metrics), SQL собирает MetricFlow, а к ответу прикладывается «квитанция»: метрика, SQL, модель, тесты и ID запроса.",
+        use: "Возьми свою главную метрику и выпиши правила, которых нет в схеме (возвраты, тестовые аккаунты, статусы). Задай агенту вопрос по ней и проверь, сколько правил он учёл сам.",
+        source: { label: "dbt Labs Blog", url: "https://www.getdbt.com/blog/aws-dbt-semantic-layer-ai-agent-revenue-accuracy" }
+      },
+      {
+        verdict: "try",
+        area: "Looker",
+        title: "MCP-сервер Looker вышел в GA: агенты ходят в данные через LookML",
+        what: "26 октября Looker-managed MCP-сервер стал общедоступным: AI-агенты работают с данными и LookML-моделями, админ выдаёт доступ на странице Manage OAuth Clients. В тот же день в GA вышел lineage для Looker (Google Cloud core), он покрывает LookML-дашборды и агентов Conversational Analytics. 29 октября в GA вышли Visualization Assistant и сводка по Explore от Gemini.",
+        use: "Подключи MCP Looker к своему агенту (Claude, Gemini, Copilot) и задай 5 вопросов, на которые уже есть ответы в дашбордах. Совпало — значит, агент считает по LookML, а не по сырым таблицам.",
+        source: { label: "Looker release notes", url: "https://docs.cloud.google.com/looker/docs/release-notes" }
+      },
+      {
+        verdict: "try",
+        area: "BigQuery",
+        title: "BigQuery пишет все разговоры data-агента в таблицу",
+        what: "26 октября в GA вышло логирование разговоров Conversational analytics: вопросы и ответы data-агента сохраняются в таблицу BigQuery в проекте агента. Включается в настройках агента.",
+        use: "Включи логирование и в пятницу выгрузи вопросы за неделю. Отбери 10 самых частых и сделай из них эталонные запросы: это и есть набор тестов для агента.",
+        source: { label: "BigQuery release notes", url: "https://docs.cloud.google.com/bigquery/docs/release-notes" }
+      },
+      {
+        verdict: "try",
+        area: "Google Sheets",
+        title: "В Connected Sheets можно спрашивать BigQuery словами",
+        what: "27 октября в GA вышла conversational analytics в Connected Sheets: в боковой панели Gemini ты задаёшь вопрос, он пишет и выполняет SQL к BigQuery, кратко описывает тренды и вставляет в таблицу обновляемые объекты с данными.",
+        use: "Отдай менеджеру, который просит «выгрузку в эксельку», лист Connected Sheets вместо файла. Но сначала проверь SQL под тремя его типовыми вопросами: фильтры и период должны быть твоими.",
+        source: { label: "BigQuery: Connected Sheets", url: "https://docs.cloud.google.com/bigquery/docs/connected-sheets#use-ca-in-connected-sheets" }
+      },
+      {
+        verdict: "try",
+        area: "Практика",
+        title: "Meta:Context: карточка контекста лежит в YAML рядом с метрикой",
+        what: "26 октября dbt Labs описал схему Meta:Context из Green Dot: пять слоёв контекста (описание, ожидания, как расследовать, связи, решения) в блоке meta метрики dbt Semantic Layer. Контекст проходит те же PR и CI, что и метрика, а агент одним запросом получает и число, и его смысл. Это пилот, цифр по точности пока нет.",
+        use: "Заполни для одной KPI три поля: зачем она, нормальный диапазон, бизнес-правила. Сравни ответы агента на вопрос «всё ли в порядке с метрикой» до и после.",
+        source: { label: "dbt Labs Blog", url: "https://www.getdbt.com/blog/meta-context-dbt-semantic-layer-business-context" }
+      },
+      {
+        verdict: "skip",
+        area: "ChatGPT",
+        title: "GPT-6.1 Terra в ChatGPT: для работы с данными ничего нового",
+        what: "26 октября в ChatGPT Work и Codex начала выкатываться GPT-6.1 Terra. OpenAI делает акцент на визуальном мышлении, работе с компьютером и тексте, лимиты планов не меняются. Про анализ данных и коннекторы в релизе ничего нет.",
+        use: "Не переключай рабочие сценарии ради модели. Если очень хочется — прогони на ней свои 10 эталонных вопросов и сравни с текущей.",
+        source: { label: "ChatGPT release notes", url: "https://help.openai.com/en/articles/6825453-chatgpt-release-notes" }
+      }
+    ],
+    brief: [
+      { text: "Looker: 29 октября на вкладке Token usage дашборда System Activity значение «Conversational Analytics API» переименовали в «Looker API». Если у тебя свой дашборд на этом поле — поправь фильтр.", url: "https://docs.cloud.google.com/looker/docs/release-notes" },
+      { text: "Snowflake CoWork: Deep Research с включённым веб-поиском теперь ищет и в интернете и цитирует веб-находки в отчёте рядом с выводами по твоим данным (30 октября).", url: "https://docs.snowflake.com/en/release-notes/2026/other/2026-10-30-snowflake-cowork-deep-research-web" },
+      { text: "Databricks: Genie Agents можно создавать по шагам через Genie Code, связи между датасетами в дашбордах вышли в GA (29 октября).", url: "https://docs.databricks.com/aws/en/ai-bi/release-notes/2026" },
+      { text: "ClickHouse обновил бенчмарк агентной аналитики (20 октября): новые модели набирают 68,7–69,7% на 201 вопросе, главная причина ошибок — неверный план запроса. Совет авторов: мерь на своём хранилище.", url: "https://clickhouse.com/blog/agentic-analytics-benchmark-round-two" }
+    ],
+    practice: {
+      title: "Выдай агенту квитанцию",
+      time: "45 минут",
+      steps: [
+        "Возьми одну денежную метрику (выручка, GMV, ARPU) и выпиши все правила расчёта, которых нет в названии полей: что вычитаем, какие статусы и аккаунты исключаем, какую дату берём.",
+        "Задай агенту три вопроса по этой метрике и к каждому ответу попроси «квитанцию»: SQL, таблицы, фильтры, период. Отметь, какие правила он пропустил и на сколько разошёлся с твоим расчётом.",
+        "Запиши правила туда, откуда агент их прочитает (семантический слой, meta-блок метрики или инструкции агента), повтори вопросы и сравни расхождение."
+      ],
+      result: "Получишь список скрытых правил главной метрики, шаблон квитанции для любого ответа агента и цифру расхождения «до/после»."
+    }
+  },
+  {
     id: "2026-10-19",
     number: 3,
     date: "19 октября 2026",
