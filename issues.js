@@ -2,6 +2,81 @@
 // verdict: "try" — пробовать сейчас, "watch" — следить, "skip" — пропустить.
 window.SDVIG_ISSUES = [
   {
+    id: "2026-11-09",
+    number: 5,
+    date: "9 ноября 2026",
+    period: "2–8 ноября",
+    shift: "Агент стал продакшен-сервисом: ему нужны мониторинг, права и бенчмарки, а не только хороший промпт.",
+    lead: "BigQuery вывел мониторинг data-агентов в Cloud Observability, Databricks ускорил бенчмарки Genie и отдал трейсы в OpenTelemetry, dbt начал проверять права на каждый вызов MCP. Кто не меряет агента, тот не знает, сколько он стоит и где ошибается.",
+    items: [
+      {
+        verdict: "try",
+        area: "BigQuery",
+        title: "Data-агенты BigQuery видны в Cloud Observability: задержка, охват, стоимость",
+        what: "2 ноября в GA вышел мониторинг data-агентов и их разговоров через Google Cloud Observability: производительность, использование, задержка и стоимость. Вместе с логированием разговоров в таблицу (GA с 26 октября) это полный контур: что спрашивают, как быстро отвечают и во что обходится.",
+        use: "Открой метрики своего агента за неделю и найди три самых дорогих или медленных разговора. Разбери их SQL: часто там полный скан таблицы без фильтра по дате.",
+        source: { label: "BigQuery release notes", url: "https://docs.cloud.google.com/bigquery/docs/release-notes" }
+      },
+      {
+        verdict: "try",
+        area: "Databricks",
+        title: "Genie: бенчмарки идут параллельно, трейсы уходят в OpenTelemetry",
+        what: "5 ноября вопросы бенчмарков Genie Agents стали запускаться параллельно, а ходы Genie Code и Genie One можно выгружать как OpenTelemetry-спаны в общую таблицу трейсов (бета, включает админ). Агент теперь работает и у тех, кому доступна только часть его источников: отвечает только по доступным. 2 ноября Genie Agents научились разбирать PDF, презентации и картинки из Unity Catalog volumes со ссылкой на страницу (Public Preview).",
+        use: "Загони свои 10 эталонных вопросов в бенчмарк Genie и прогоняй его после каждой правки инструкций. Раз прогон стал быстрым, делай это перед каждым релизом агента.",
+        source: { label: "Databricks AI/BI release notes", url: "https://docs.databricks.com/gcp/en/ai-bi/release-notes/2026" }
+      },
+      {
+        verdict: "try",
+        area: "dbt",
+        title: "dbt MCP отдаёт метрики read-only пользователям и проверяет права на каждый вызов",
+        what: "В ноябрьских release notes dbt: удалённый MCP-сервер проверяет права на каждый вызов инструмента по проекту, окружению, джобу или запуску. Для подключения больше не нужен набор прав Developer, а read-only пользователи запрашивают метрики через общий аналитический доступ, который настраивает админ. Сервер появился в Databricks Marketplace.",
+        use: "Дай менеджеру с read-only доступом агента, который ходит в метрики через dbt MCP, вместо прямого доступа к таблицам. Проверь, что execute_sql у него не работает, а query_metrics работает.",
+        source: { label: "dbt release notes", url: "https://docs.getdbt.com/docs/dbt-versions/release-notes" }
+      },
+      {
+        verdict: "watch",
+        area: "Snowflake",
+        title: "LOD-выражения в semantic views: метрика на другом зерне, чем запрос",
+        what: "2 ноября в Preview вышли LOD-выражения в semantic views: FIXED, INCLUDE и EXCLUDE DIMENSIONS считают значение на зерне, отличном от группировки запроса. Пример: средняя выручка на клиента в регионе. Ограничение: работает в SQL к semantic view и в Semantic Studio, но Cortex Analyst и Cortex Agents его пока не поддерживают.",
+        use: "Найди метрику, которую агенты считают неправильно из-за двойной агрегации (среднее от сумм), и опиши её через INCLUDE DIMENSIONS. Агенту отдавай после поддержки в Cortex.",
+        source: { label: "Snowflake release notes", url: "https://docs.snowflake.com/en/release-notes/2026/other/2026-11-02-semantic-views-lod-metrics-preview" }
+      },
+      {
+        verdict: "watch",
+        area: "Copilot",
+        title: "Copilot в Excel сверяет счета и разбирает отклонения от плана",
+        what: "3 ноября Microsoft анонсировал финансовые возможности Copilot в Excel и Cowork: сверка счетов с пометкой расхождений, черновики проводок, анализ факта против плана с ключевыми драйверами. Опционально пишется журнал: что Copilot изменил и почему (в Excel уже есть). Сейчас Public Preview через Frontier, GA начнётся 13 ноября.",
+        use: "Если делаешь plan-vs-fact для финансов, дождись GA и сравни разбор драйверов от Copilot со своим на прошлом месяце. Журнал изменений включай сразу: это и есть квитанция.",
+        source: { label: "Microsoft 365 Message Center, MC1536053", url: "https://mc.merill.net/message/MC1536053" }
+      },
+      {
+        verdict: "skip",
+        area: "Claude",
+        title: "Personal Finance в Claude: личные траты, к рабочей аналитике отношения нет",
+        what: "5 ноября Anthropic запустил бету Personal Finance для Pro, Max и Ultra в США: подключаешь банковские счета через Plaid, Claude считает траты по категориям и строит дашборды. Доступ только на чтение, до двух лет транзакций.",
+        use: "Для работы пропусти. Полезна только идея: дашборд, который пользователь дорабатывает вопросами, — тот же паттерн, что в Claude Dashboards.",
+        source: { label: "Claude release notes (Releasebot)", url: "https://releasebot.io/updates/anthropic/claude" }
+      }
+    ],
+    brief: [
+      { text: "Snowflake: HTML-отчёты в Preview (4 ноября). CoCo собирает самодостаточный отчёт с интерактивными графиками, его публикуют ролям, и получателям не нужен доступ к данным. Это снимок: после обновления данных отчёт надо перепубликовать.", url: "https://docs.snowflake.com/en/release-notes/2026/other/2026-11-04-html-reports-preview" },
+      { text: "Looker 26.24 (6 ноября): исправлен дашборд System Activity для Conversational Analytics, раньше запуски workflow-агентов считались разговорами на дашбордах. Если мерил адопшен агентов по этим плиткам, пересчитай.", url: "https://docs.cloud.google.com/looker/docs/release-notes" },
+      { text: "Google (4 ноября): Data Agent Kit вышел в GA и приносит инструменты данных в VS Code, Claude Code и Antigravity. Поддержка семантических моделей Knowledge Catalog (LookML, dbt, Snowflake, Databricks) тоже в GA.", url: "https://cloud.google.com/blog/products/databases/whats-new-across-googles-agentic-data-cloud" },
+      { text: "Snowflake-managed MCP (4 ноября): Cortex-агенты запускаются в фоне и возвращают handle для опроса. Долгий разбор больше не упирается в таймаут клиента.", url: "https://docs.snowflake.com/en/release-notes/2026/other/2026-11-04-mcp-async-agent-tools" },
+      { text: "PostHog (5–6 ноября): дашборды из нескольких проектов с общими фильтрами и маскирование колонок источников хешами, по которым можно джойнить и считать.", url: "https://posthog.com/changelog?id=3121" }
+    ],
+    practice: {
+      title: "Проведи агенту еженедельный техосмотр",
+      time: "45 минут",
+      steps: [
+        "Выгрузи логи разговоров агента за неделю (таблица логов BigQuery, Monitor в Genie или любой журнал) и отметь три сигнала: вопрос переформулировали, агент выбрал не ту таблицу, ответ не совпал с дашбордом.",
+        "Возьми 5 худших разговоров и для каждого запиши причину одной строкой: нет определения метрики, неясная колонка, нет связи между таблицами, нет эталонного запроса.",
+        "Закрой две самые частые причины (описание, эталонный запрос или инструкция), добавь эти вопросы в набор эталонных и прогони набор заново."
+      ],
+      result: "Получишь список дыр в контексте агента, пополненный набор эталонных вопросов и процент верных ответов «до/после», который можно повторять каждую неделю."
+    }
+  },
+  {
     id: "2026-11-02",
     number: 4,
     date: "2 ноября 2026",
